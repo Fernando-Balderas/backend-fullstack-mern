@@ -21,35 +21,34 @@ router.post('/', (req, res) => {
     author: req.body.author,
     description: req.body.description,
   })
-
-  newBook.save().then(info => res.json(info))
+  newBook.save()
+    .then(info => res.status(200).json(info))
+    .catch(err => res.status(400).json({msg: 'create failed'}));
 })
 
 // @route DELETE /api/books
 // @desc Delete book (public)
 router.delete('/', (req, res) => {
-  Book.findOneAndRemove({_id: req.body.id}).then(() => {
-    res.json({success: true})
-  })
+  Book.findOneAndRemove({_id: req.body.id})
+    .then(() => res.json({success: true}))
+    .catch(err => res.status(400).json({msg: 'delete failed'}))
 })
 
 // @route UPDATE /api/books/update/:id
 // @desc Update book (public)
 router.post('/update/:id', (req, res) => {
   Book.findOneAndUpdate(
-    {_id: req.params.id},
-    {
-      $set: {
-        title: req.body.title,
-        author: req.body.author,
-        description: req.body.description,
+      {_id: req.params.id},
+      {
+        $set: {
+          title: req.body.title,
+          author: req.body.author,
+          description: req.body.description,
+        },
       },
-    },
-    {new: true},
-  )
-    .then(info => {
-      res.json(info)
-    })
+      {new: true},
+    )
+    .then(info => res.status(200).json(info))
     .catch(err => res.status(400).json({msg: 'update failed'}))
 })
 
