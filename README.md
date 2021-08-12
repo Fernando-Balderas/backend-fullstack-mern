@@ -1,3 +1,3 @@
-# backend fullstack mern app
---
-Link to Netlify Site [frontend-fullstack-mern](https://boring-hermann-6bc9de.netlify.app).
+# Backend Fullstack MERN App
+
+This backend part implements an API to handle the CRUD requests from the [frontend part](https://github.com/Fernando-Balderas/frontend-fullstack-mern).
