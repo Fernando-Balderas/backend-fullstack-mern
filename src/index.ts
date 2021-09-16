@@ -1,35 +1,42 @@
-import express from "express";
-import cors from "cors";
-import mongoose from "mongoose";
+import { Server } from "http";
+import { connect } from "mongoose";
+import app from "./app";
+import config from "./config/config";
+import logger from "./config/logger";
 
-// imports the API from the routes/api folder
-import router from "./routes/api/books";
+let server: Server;
+connect(config.mongoose.url, config.mongoose.options, (error) => {
+  if (error) {
+    return;
+  }
+  logger.info("Connected to MongoDB");
+  server = app.listen(config.port, () => {
+    logger.info(`Listening to port ${config.port}`);
+  });
+});
 
-// initializes the express application
-const app = express();
+const exitHandler = () => {
+  if (server) {
+    server.close(() => {
+      logger.info("Server closed");
+      process.exit(1);
+    });
+  } else {
+    process.exit(1);
+  }
+};
 
-// sets up CORS for Cross-Origin-Resource-Sharing
-app.use(cors());
-// converts API responses to JSON for easy use
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+const unexpectedErrorHandler = (error: string) => {
+  logger.error(error);
+  exitHandler();
+};
 
-// imports our database credentials (stored separately for security)
-import config from "./config/keys";
+process.on("uncaughtException", unexpectedErrorHandler);
+process.on("unhandledRejection", unexpectedErrorHandler);
 
-// initializes our database using the credentials
-mongoose.set("useFindAndModify", false);
-mongoose
-  //   .connect(db, () => {}, {useNewUrlParser: true})
-  .connect(config.mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("Mongo Database connected"))
-  .catch((err) => console.log(err));
-
-// creates a route where we can interact with our API
-app.use("/api/books", router);
-
-// sets the port number depending if we are in production or development
-const port = process.env.PORT || 5000;
-
-// intializes the server and logs a message
-app.listen(port, () => console.log(`Server running on port ${port}`));
+process.on("SIGTERM", () => {
+  logger.info("SIGTERM received");
+  if (server) {
+    server.close();
+  }
+});
